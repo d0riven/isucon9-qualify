@@ -20,13 +20,22 @@ SCRIPT
 Vagrant.configure(2) do |config|
   config.vm.box = "bento/ubuntu-18.04"
   config.vm.provider "virtualbox" do |vm|
-    vm.name   = "isucon9-quarifier"
     vm.cpus   = 4
     vm.memory = 2048
   end
-  config.vm.hostname = "isucon9-quarifier"
-
   config.vm.provision :shell, inline: $disable_unattended_upgrades
   config.vm.provision :shell, inline: $setup_quarifier_environment
-  config.vm.synced_folder "../", "/vagrant", type: "rsync", rsync__exclude: ".git/"
+  [
+      {'name' => 'webapp1', 'ip' => '192.168.39.11'},
+      {'name' => 'webapp2', 'ip' => '192.168.39.12'},
+      {'name' => 'webapp3', 'ip' => '192.168.39.13'},
+  ].each do |host|
+    config.vm.define host['name'] do |server|
+      server.vm.provider "virtualbox" do |vm|
+        vm.name   = "isucon9-quarifier-" + host['name']
+      end
+      server.vm.hostname = "isucon9-quarifier-" + host['name']
+      server.vm.network "private_network", ip: host['ip']
+    end
+  end
 end
