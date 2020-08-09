@@ -25,3 +25,31 @@ staticcheck:
 
 clean:
 	rm -rf bin/*
+	rm -rf webapp/public/upload
+	rm -rf initial-data/images
+
+.PHONY: FORCE
+FORCE:
+
+.PHONY: setup
+setup: initial-data/result/initial.sql webapp/public/upload initial-data/images
+	$(MAKE)
+	./bin/benchmarker
+
+# 初期データ作成
+initial-data/result/initial.sql:
+	$(MAKE) -C initial-data result/initial.sql
+
+# 初期画像データダウンロード
+webapp/public/upload: webapp/public/v3_initial_data
+	mv $< $@
+	touch $@
+webapp/public/v3_initial_data: webapp/public/initial.zip
+	unzip -d $(<D) $<
+webapp/public/initial.zip:
+	curl -L https://github.com/isucon/isucon9-qualify/releases/download/v2/initial.zip -o $@
+
+# ベンチマーク用画像データダウンロード
+initial-data/images:
+	$(MAKE) -C initial-data images
+
